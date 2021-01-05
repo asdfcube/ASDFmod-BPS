@@ -1,0 +1,10 @@
+[
+{
+  "modid": "asdfbps",
+  "name": "ASDF Client Side Block Placing Sound Mod",
+  "description": "Play block placing sound locally instead of waiting for the server.\nCommand: /bps to toggle between on and off",
+  "version": "1",
+  "authorList": ["asdfcube"],
+  "mcversion": "1.8.9"
+}
+]

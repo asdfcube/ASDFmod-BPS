@@ -1,0 +1,26 @@
+buildscript{
+    repositories{
+        jcenter()
+        maven{
+            name="forge"
+            url="http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies{
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+    }
+}
+apply plugin:'net.minecraftforge.gradle.forge'
+apply plugin:'java'
+compileJava{
+    sourceCompatibility=1.8
+    targetCompatibility=1.8
+}
+version="1"
+group="asdf.mod.BPS"
+archivesBaseName="asdfbps"
+minecraft{
+    version="1.8.9-11.15.1.2318-1.8.9"
+    runDir="run"
+    mappings="stable_20"
+}
