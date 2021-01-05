@@ -7,7 +7,7 @@ This is especially annoying when you have high ping and play minigames that plac
 <br>
 ### The Mod
 This mod is designed to be lite and has as little impact on the game as possible.<br>
-And it is so small that all codes can be fit into [one singular file](src\main\java\asdf\mod\BPS\BPS.java).
+And it is so small that all codes can be fit into [one singular file](src/main/java/asdf/mod/BPS/BPS.java).
 <br>
 ### Download/Building & Installation
 Just go to [Releases](https://github.com/asdfcube/ASDFmod-BPS/releases) and download the `asdfbps-1.jar` in Assest tab.<br>
