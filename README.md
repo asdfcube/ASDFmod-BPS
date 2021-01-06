@@ -15,8 +15,8 @@ Just go to [Releases](https://github.com/asdfcube/ASDFmod-BPS/releases) and down
 ~~Although it will probably never get updated because there is nothing to update.~~<br>
 <br>
 If you are a nerd and want to compile it yourself, just clone this repository, then run<br>
-`./gradew build` if you are on Windows;<br>
-`gradew build` if you are on macOS or Linux.<br>
+`./gradlew build` if you are on Windows;<br>
+`gradlew build` if you are on macOS or Linux.<br>
 The built mod jar will be in the `build/libs` folder, with name asdfbps-1.jar<br>
 <br>
 To install, just move the mod file into your mods folder in `.minecraft` like every other mod.<br>
