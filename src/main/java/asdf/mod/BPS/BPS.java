@@ -9,7 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.command.CommandBase;
@@ -21,7 +21,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
-
+import net.minecraft.world.WorldSettings;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -42,7 +42,7 @@ public class BPS{
     private boolean inited=false;
     private static boolean local;
     // Multithreading B)
-    private final ScheduledExecutorService executor=Executors.newScheduledThreadPool(5);
+    private final ScheduledExecutorService executor=Executors.newScheduledThreadPool(10);
 
     // Initialize the mod, which only consists of a few event listeners and one singular command
     @EventHandler
@@ -54,11 +54,11 @@ public class BPS{
     // Command (/bps)
     private static class CMD extends CommandBase implements ICommand{
         @Override
-        public String getCommandName(){ return "bps"; }
+        public String getCommandName(){return "bps";}
         @Override
-        public String getCommandUsage(ICommandSender iCommandSender){ return "/bps"; }
+        public String getCommandUsage(ICommandSender iCommandSender){return "/bps";}
         @Override
-        public boolean canCommandSenderUseCommand(ICommandSender iCommandSender){ return true; }
+        public boolean canCommandSenderUseCommand(ICommandSender iCommandSender){return true;}
         @Override
         public void processCommand(ICommandSender iCommandSender,String[] strings) throws CommandException{
             if(local) iCommandSender.addChatMessage(new ChatComponentText("You don't need it on a local server."));
@@ -96,34 +96,39 @@ public class BPS{
                         super.write(context,packet,channelPromise);
                         // Use block placing packet instead of event manager because latter sucks
                         if(packet instanceof C08PacketPlayerBlockPlacement &&
+                                Minecraft.getMinecraft().playerController.getCurrentGameType()!=WorldSettings.GameType.ADVENTURE &&
+                                // Block direction=255 means nothing is placed
+                                ((C08PacketPlayerBlockPlacement)packet).getPlacedBlockDirection()!=255 &&
                                 ((C08PacketPlayerBlockPlacement)packet).getStack()!=null &&
-                                ((C08PacketPlayerBlockPlacement)packet).getStack().getItem() instanceof ItemBlock &&
-                                // If you right click on a block with blocks but no blocks are placed, clients sends the same packet to servers but with y=-1
-                                ((C08PacketPlayerBlockPlacement)packet).getPosition().getY()!=-1
+                                ((C08PacketPlayerBlockPlacement)packet).getStack().getItem() instanceof ItemBlock
                         ){
+                            switch(Block.getIdFromBlock(Minecraft.getMinecraft().theWorld.getBlockState(((C08PacketPlayerBlockPlacement)packet).getPosition()).getBlock())){
+                                // Thank you Mojang, packet size over performance
+                                case 145: case 138: case 26: case 117: case 143: case 77: case 92: case 118: case 130: case 146: case 54: case 137: case 151: case 178: case 23: case 64: case 71: case 193: case 194: case 195: case 196: case 197: case 122: case 116: case 183: case 184: case 185: case 186: case 187: case 188: case 189: case 190: case 191: case 192: case 85: case 107: case 140: case 113: case 61: case 62: case 154: case 84: case 69: case 25: case 36: case 149: case 150: case 93: case 94: case 63: case 68: case 96: case 167: case 58:
+                                    if(!Minecraft.getMinecraft().thePlayer.isSneaking()) return;
+                                default:
+                            }
                             float x=(float)(((C08PacketPlayerBlockPlacement)packet).getPosition().getX()+0.5);
                             float y=(float)(((C08PacketPlayerBlockPlacement)packet).getPosition().getY()+0.5);
                             float z=(float)(((C08PacketPlayerBlockPlacement)packet).getPosition().getZ()+0.5);
-                            // Don't know what Mojang was thinking
                             switch(((C08PacketPlayerBlockPlacement)packet).getPlacedBlockDirection()){
-                                case 0: y--; break;
-                                case 1: y++; break;
-                                case 2: z--; break;
-                                case 3: z++; break;
-                                case 4: x--; break;
+                                case 0: y--;break;
+                                case 1: y++;break;
+                                case 2: z--;break;
+                                case 3: z++;break;
+                                case 4: x--;break;
                                 case 5: x++;
                             }
-                            float finalX=x; float finalY=y; float finalZ=z;
+                            float finalX=x;float finalY=y;float finalZ=z;
                             // Schedule the sound in main thread thanks to brilliantly written game codes
                             Minecraft.getMinecraft().addScheduledTask(()->
-                                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(
-                                        new ResourceLocation(((ItemBlock)((C08PacketPlayerBlockPlacement)packet).getStack().getItem()).getBlock().stepSound.getBreakSound()),
-                                        // The pitch of block placing is 0.7936508, don't question it
-                                        1f,0.7936508f,finalX,finalY,finalZ))
+                                    Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(
+                                            new ResourceLocation(((ItemBlock)((C08PacketPlayerBlockPlacement)packet).getStack().getItem()).getBlock().stepSound.getBreakSound()),
+                                            // The pitch of block placing is 0.7936508, don't question it
+                                            1f,0.7936508f,finalX,finalY,finalZ))
                             );
                             String c=x+" "+y+" "+z;
                             blocks.add(c);
-                            // I want the mod to have as little impact on the main and Netty thread as possible
                             executor.schedule(()->blocks.remove(c),1,TimeUnit.SECONDS);
                         }
                     }
@@ -137,11 +142,17 @@ public class BPS{
             }else{
                 local=true;
                 new Thread(()->{
-                    while(Minecraft.getMinecraft().thePlayer==null) try{ Thread.sleep(50); }catch(InterruptedException e){ e.printStackTrace(); }
-                    Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("CliBPS disabled on local servers."));
+                    while(Minecraft.getMinecraft().thePlayer==null) try{Thread.sleep(500);}catch(InterruptedException e){e.printStackTrace();}
+                    Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS disabled on local servers."));
                 }).start();
             }
-        }else local=event.isLocal;
+        }else{
+            local=event.isLocal;
+            new Thread(()->{
+                while(Minecraft.getMinecraft().thePlayer==null) try{Thread.sleep(500);}catch(InterruptedException e){e.printStackTrace();}
+                Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS was toggled off, do /bps to toggle it back on."));
+            }).start();
+        }
     }
 
     // Triggered when you leave a server to remove the packet handler
@@ -157,6 +168,6 @@ public class BPS{
             inited=false;
         }
     }
-
+    
     // That's it, simple, ez
 }
