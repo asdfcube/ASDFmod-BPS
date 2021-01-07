@@ -90,7 +90,8 @@ public class BPS{
                                         ((S29PacketSoundEffect)packet).getSoundName()=="random.anvil_land") &&
                                 blocks.remove(((S29PacketSoundEffect)packet).getX()+" "+
                                         ((S29PacketSoundEffect)packet).getY()+" "+
-                                        ((S29PacketSoundEffect)packet).getZ())) ;
+                                        ((S29PacketSoundEffect)packet).getZ())
+                        ) ;
                         else super.channelRead(context,packet);
                     }
                 };
@@ -108,7 +109,7 @@ public class BPS{
                         ){
                             switch(Block.getIdFromBlock(Minecraft.getMinecraft().theWorld.getBlockState(((C08PacketPlayerBlockPlacement)packet).getPosition()).getBlock())){
                                 // Thank you Mojang, packet size over performance
-                                case 145: case 138: case 26: case 117: case 143: case 77: case 92: case 118: case 130: case 146: case 54: case 137: case 151: case 178: case 23: case 64: case 71: case 193: case 194: case 195: case 196: case 197: case 122: case 116: case 183: case 184: case 185: case 186: case 187: case 188: case 189: case 190: case 191: case 192: case 85: case 107: case 140: case 113: case 61: case 62: case 154: case 84: case 69: case 25: case 36: case 149: case 150: case 93: case 94: case 63: case 68: case 96: case 167: case 58:
+                                case 23: case 25: case 26: case 36: case 54: case 61: case 62: case 63: case 64: case 68: case 58: case 69: case 71: case 77: case 84: case 85: case 92: case 93: case 94: case 96: case 107: case 113: case 116: case 117: case 118: case 122: case 130: case 137: case 138: case 140: case 143: case 145: case 146: case 149: case 150: case 151: case 154: case 167: case 178: case 183: case 184: case 185: case 186: case 187: case 188: case 189: case 190: case 191: case 192: case 193: case 194: case 195: case 196:
                                     if(!Minecraft.getMinecraft().thePlayer.isSneaking()) return;
                                 default:
                             }
