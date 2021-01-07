@@ -85,9 +85,9 @@ public class BPS{
                         if(packet instanceof S29PacketSoundEffect &&
                                 (((S29PacketSoundEffect)packet).getSoundName().startsWith("dig.") ||
                                         // Special cases for glass, slime, and anvil
-                                        ((S29PacketSoundEffect)packet).getSoundName()=="step.stone" ||
-                                        ((S29PacketSoundEffect)packet).getSoundName()=="mob.slime.big" ||
-                                        ((S29PacketSoundEffect)packet).getSoundName()=="random.anvil_land") &&
+                                        ((S29PacketSoundEffect)packet).getSoundName().equals("step.stone") ||
+                                        ((S29PacketSoundEffect)packet).getSoundName().equals("mob.slime.big") ||
+                                        ((S29PacketSoundEffect)packet).getSoundName().equals("random.anvil_land")) &&
                                 blocks.remove(((S29PacketSoundEffect)packet).getX()+" "+
                                         ((S29PacketSoundEffect)packet).getY()+" "+
                                         ((S29PacketSoundEffect)packet).getZ())
