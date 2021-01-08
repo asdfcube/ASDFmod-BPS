@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 @Mod(modid="asdfbps",version="1",clientSideOnly=true)
 public class BPS{
     private static boolean enabled=true;
+    // Concurrent safety
     private final CopyOnWriteArrayList<String> blocks=new CopyOnWriteArrayList<>();
     private boolean inited=false;
     private static boolean local;
@@ -84,6 +85,7 @@ public class BPS{
                     public void channelRead(ChannelHandlerContext context,Object packet) throws Exception{
                         // Ignore S29PacketSoundEffect of those blocks you placed
                         if(packet instanceof S29PacketSoundEffect &&
+                                ((S29PacketSoundEffect)packet).getPitch()==0.7936508f &&
                                 blocks.remove(((S29PacketSoundEffect)packet).getX()+" "+
                                         ((S29PacketSoundEffect)packet).getY()+" "+
                                         ((S29PacketSoundEffect)packet).getZ())
@@ -120,7 +122,7 @@ public class BPS{
                                 case 5: x++;
                             }
                             float finalX=x;float finalY=y;float finalZ=z;
-                            // Schedule the sound in main thread thanks to brilliantly written game codes
+                            // Schedule the sound in main thread
                             Minecraft.getMinecraft().addScheduledTask(()->
                                     Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(
                                             new ResourceLocation(((ItemBlock)((C08PacketPlayerBlockPlacement)packet).getStack().getItem()).getBlock().stepSound.getPlaceSound()),
@@ -129,6 +131,7 @@ public class BPS{
                             );
                             String c=x+" "+y+" "+z;
                             blocks.add(c);
+                            // Delete the data after 500ms in another thread
                             executor.schedule(()->blocks.remove(c),500,TimeUnit.MILLISECONDS);
                         }
                     }
