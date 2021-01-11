@@ -8,7 +8,8 @@ This is especially annoying when you have high ping and play minigames that plac
 ### The Mod
 This mod is designed to be lite and has as little impact on the game as possible.<br>
 And it is so small that all codes can be fit into [one singular file](src/main/java/asdf/mod/BPS/BPS.java).<br>
-You will need at least Java 8 and must be Minecraft Forge 1.8.9.
+You will need at least Java 8 and Minecraft Forge 1.8.9.<br>
+*Note: The codes are compatible with basically all Forge versions but you will need to change [mcmod.info](src/main/resources/mcmod.info) and [build.gradle](build.gradle) a bit, and compile them yourself.*
 <br>
 ### Download/Building & Installation
 Just go to [Releases](https://github.com/asdfcube/ASDFmod-BPS/releases) and download the `asdfbps-1.jar` in Assets tab.<br>
