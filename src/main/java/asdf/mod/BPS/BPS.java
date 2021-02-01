@@ -29,6 +29,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import tv.twitch.chat.Chat;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -44,6 +45,8 @@ public class BPS{
     private static boolean local;
     // Multithreading B)
     private final ExecutorService executor=Executors.newFixedThreadPool(15);
+
+    private long ping;
 
     // Initialize the mod, which only consists of a few event listeners and one singular command
     @EventHandler
@@ -62,11 +65,17 @@ public class BPS{
         public boolean canCommandSenderUseCommand(ICommandSender iCommandSender){return true;}
         @Override
         public void processCommand(ICommandSender iCommandSender,String[] strings) throws CommandException{
-            if(local) iCommandSender.addChatMessage(new ChatComponentText("You don't need it on a local server."));
-            else{
-                iCommandSender.addChatMessage(new ChatComponentText("Log out of current server for the toggle to take effect."));
-                enabled=!enabled;
-            }
+            if(strings.length==0){
+                if(enabled && !local) iCommandSender.addChatMessage(new ChatComponentText("BPS is currently enabled. Do \"/bps toggle\" to disable it."));
+                else iCommandSender.addChatMessage(new ChatComponentText("BPS is currently disabled. Do \"/bps toggle\" to enable it."));
+            }else if(strings[0].equals("toggle")){
+                if(local) iCommandSender.addChatMessage(new ChatComponentText("You don't need it on a local server."));
+                else{
+                    if(enabled) iCommandSender.addChatMessage(new ChatComponentText("BPS has been disabled, log out of current server for the toggle to take effect."));
+                    else iCommandSender.addChatMessage(new ChatComponentText("BPS has been enabled, log out of current server for the toggle to take effect."));
+                    enabled=!enabled;
+                }
+            }else iCommandSender.addChatMessage(new ChatComponentText("Unknown command, do \"/bps\" to check current toggle state, \"/bps toggle\" to toggle it."));
         }
     }
 
@@ -74,9 +83,10 @@ public class BPS{
     @SubscribeEvent
     public void ServerJoinEvent(FMLNetworkEvent.ClientConnectedToServerEvent event){
         // Check if BPS is enabled
+        local=event.isLocal;
         if(enabled){
             // You don't need this on local server
-            if(!event.isLocal){
+            if(!local){
                 blocks.clear();
                 // Create a netty pipeline handler
                 ChannelDuplexHandler handlerIn=new ChannelDuplexHandler(){
@@ -86,7 +96,7 @@ public class BPS{
                         try{
                             if(packet instanceof S29PacketSoundEffect &&
                                     // ((S29PacketSoundEffect)packet).getPitch()==0.7936508f &&
-                                    blocks.remove(((S29PacketSoundEffect)packet).getX()+" "+
+                                    blocks.contains(((S29PacketSoundEffect)packet).getX()+" "+
                                             ((S29PacketSoundEffect)packet).getY()+" "+
                                             ((S29PacketSoundEffect)packet).getZ())
                             ) ;
@@ -142,7 +152,7 @@ public class BPS{
                                     blocks.add(c);
                                     // Delete the data after 600ms
                                     try{
-                                        Thread.sleep(600);
+                                        Thread.sleep(ping);
                                         blocks.remove(c);
                                     // Catching ConcurrentModificationException
                                     }catch(Exception e){}
@@ -156,20 +166,18 @@ public class BPS{
                 // Register the handler after the Minecraft handler to play sound
                 event.manager.channel().pipeline().addAfter("packet_handler","asdfOutHandler",handlerOut);
                 inited=true;
-                local=false;
+                ping=Minecraft.getMinecraft().getCurrentServerData().pingToServer+150;
             }else{
-                local=true;
-                new Thread(()->{
+                executor.execute(()->{
                     while(Minecraft.getMinecraft().thePlayer==null) try{Thread.sleep(500);}catch(InterruptedException e){}
-                    Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS disabled on local servers."));
-                }).start();
+                    Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS is automatically disabled on local servers."));
+                });
             }
         }else{
-            local=event.isLocal;
-            new Thread(()->{
+            executor.execute(()->{
                 while(Minecraft.getMinecraft().thePlayer==null) try{Thread.sleep(500);}catch(InterruptedException e){}
-                Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS was toggled off, do /bps to toggle it back on."));
-            }).start();
+                Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("BPS was toggled off, do \"/bps toggle\" to toggle it back on."));
+            });
         }
     }
 
@@ -177,13 +185,13 @@ public class BPS{
     @SubscribeEvent
     public void ServerQuitEvent(FMLNetworkEvent.ClientDisconnectionFromServerEvent event){
         if(inited){
+            inited=false;
             Channel channel=event.manager.channel();
             channel.eventLoop().submit(()->{
                 channel.pipeline().remove("asdfInHandler");
                 channel.pipeline().remove("asdfOutHandler");
                 return null;
             });
-            inited=false;
         }
     }
 
