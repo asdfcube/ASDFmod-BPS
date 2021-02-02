@@ -19,7 +19,6 @@ You will need at least Java 8 and Minecraft Forge 1.8.9.<br>
 <br>
 ### Download/Building & Installation
 Just go to [Releases](https://github.com/asdfcube/ASDFmod-BPS/releases) and download the `asdfbps-1.jar` in Assets tab.<br>
-~~Although it will probably never get updated because there is nothing to update.~~<br>
 <br>
 If you are a nerd and want to compile it yourself, just clone this repository, then run<br>
 `./gradlew build` if you are on Windows;<br>
